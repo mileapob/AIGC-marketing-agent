@@ -6,9 +6,8 @@ Research Agent — ReAct 模式
 import os
 import json
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import tool
+from langgraph.prebuilt import create_react_agent
 from tavily import TavilyClient
 
 
@@ -33,50 +32,19 @@ def web_search_tool(query: str) -> str:
     return "\n".join(lines)
 
 
-# ---------- Prompt ----------
-
-REACT_PROMPT = PromptTemplate.from_template("""你是一个营销趋势研究专家，使用 ReAct 模式分析产品的营销趋势。
-
-产品描述：{product_desc}
-目标平台：{platform}
-
-你可以使用以下工具：
-{tools}
-
-工具名称：{tool_names}
-
-按照以下格式推理：
-Thought: 我需要了解什么信息？
-Action: 工具名称
-Action Input: 工具输入
-Observation: 工具返回结果
-... (可重复 Thought/Action/Observation 最多3次)
-Thought: 我已经收集到足够信息
-Final Answer: 以 JSON 格式返回，包含：
-{{
-  "trend_keywords": ["关键词1", "关键词2", ...],  // 5-8个热门营销关键词
-  "trend_summary": "趋势摘要，100字以内",
-  "competitor_styles": ["风格描述1", "风格描述2"]  // 竞品内容风格
-}}
-
-开始！
-
-{agent_scratchpad}""")
-
-
 # ---------- Agent ----------
 
-def run_research_agent(product_desc: str, platform: str) -> dict:
-    """
-    运行 Research Agent，返回趋势关键词和摘要
+SYSTEM_PROMPT = """你是一个营销趋势研究专家，使用 ReAct 模式分析产品的营销趋势。
+搜索完成后，以 JSON 格式返回结果，包含：
+{
+  "trend_keywords": ["关键词1", "关键词2", ...],
+  "trend_summary": "趋势摘要，100字以内",
+  "competitor_styles": ["风格描述1", "风格描述2"]
+}
+只返回 JSON，不要其他文字。"""
 
-    Returns:
-        {
-            "trend_keywords": list,
-            "trend_summary": str,
-            "competitor_styles": list,
-        }
-    """
+
+def run_research_agent(product_desc: str, platform: str) -> dict:
     llm = ChatOpenAI(
         model="deepseek-chat",
         api_key=os.getenv("DEEPSEEK_API_KEY"),
@@ -84,25 +52,27 @@ def run_research_agent(product_desc: str, platform: str) -> dict:
         temperature=0.3,
     )
 
-    tools = [web_search_tool]
-    agent = create_react_agent(llm=llm, tools=tools, prompt=REACT_PROMPT)
-    executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        max_iterations=4,
-        verbose=True,
-        handle_parsing_errors=True,
+    agent = create_react_agent(
+        model=llm,
+        tools=[web_search_tool],
+        prompt=SYSTEM_PROMPT,
     )
 
-    result = executor.invoke({
-        "product_desc": product_desc,
-        "platform": platform,
+    user_message = f"产品描述：{product_desc}\n目标平台：{platform}\n请搜索该产品的营销趋势和热词。"
+
+    result = agent.invoke({
+        "messages": [{"role": "user", "content": user_message}]
     })
 
-    output = result.get("output", "{}")
-    # 尝试从输出中提取 JSON
+    # 提取最后一条 AI 消息
+    output = ""
+    for msg in reversed(result.get("messages", [])):
+        if hasattr(msg, "content") and msg.content:
+            output = msg.content
+            break
+
+    # 提取 JSON
     try:
-        # 找到第一个 { 和最后一个 }
         start = output.find("{")
         end = output.rfind("}") + 1
         if start >= 0 and end > start:
@@ -110,7 +80,6 @@ def run_research_agent(product_desc: str, platform: str) -> dict:
         else:
             raise ValueError("No JSON found")
     except Exception:
-        # 降级：返回空结构
         data = {
             "trend_keywords": [],
             "trend_summary": output[:200],
