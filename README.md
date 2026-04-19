@@ -24,3 +24,5 @@
 ## 2.执行ui中的app.py文件
 
 注意evaluate中原本使用的是doubao的模型，但由于codespace是海外服务器，doubao没有海外服务器，所以使用Qwen-VL-Max进行评估。
+
+         python ui/app.py
