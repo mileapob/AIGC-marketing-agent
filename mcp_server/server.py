@@ -10,9 +10,9 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from mcp.server.fastmcp import FastMCP
-from mcp.tools.web_search import web_search
-from mcp.tools.image_gen import generate_image, download_image
-from mcp.tools.file_save import save_result
+from mcp_server.tools.image_gen import generate_image, download_image  
+from mcp_server.tools.file_save import save_result 
+from mcp_server.tools.web_search import web_search
 
 mcp = FastMCP("marketing-tools")
 

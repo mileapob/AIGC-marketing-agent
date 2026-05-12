@@ -24,7 +24,7 @@ SYSTEM_PROMPT = """你是一个营销趋势研究专家，使用 ReAct 模式分
 }
 只返回 JSON，不要其他文字。"""
 
-MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp" / "server.py")
+MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp_server" / "server.py")
 
 
 async def _run_async(product_desc: str, platform: str) -> dict:

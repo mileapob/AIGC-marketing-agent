@@ -6,6 +6,7 @@ Image Agent — 多模态
   3. 调用 generate_image 生成图片并下载本地
 """
 import os
+import json
 import base64
 import asyncio
 from pathlib import Path
@@ -16,7 +17,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 
-MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp" / "server.py")
+MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp_server" / "server.py")
 
 
 # ---------- 图片理解 ----------
@@ -195,4 +196,6 @@ async def _call_mcp_image(prompt: str, output_dir: str) -> dict:
                 "quality": "standard",
                 "save_dir": output_dir,
             })
+    if isinstance(result, list):
+        return json.loads(result[0]["text"])
     return result

@@ -13,6 +13,9 @@ load_dotenv()
 
 from agents.supervisor import run_pipeline
 
+import nest_asyncio
+nest_asyncio.apply()
+
 
 # ---------- 核心回调 ----------
 
@@ -142,4 +145,4 @@ with gr.Blocks(title="AI营销内容生成助手", theme=gr.themes.Soft()) as de
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860, share=False)
     
-yt-dlp -f "best[ext=mp4]" -o "/workspaces/Video-review-agent/tmp/test.mp4" "B站视频链接"
+

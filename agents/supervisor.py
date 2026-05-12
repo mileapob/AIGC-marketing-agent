@@ -39,8 +39,9 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 from memory.store import query_similar, save_generation
+import json
 
-MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp" / "server.py")
+MCP_SERVER_PATH = str(Path(__file__).parent.parent / "mcp_server" / "server.py")
 
 
 async def _call_mcp_save(scripts: list, image_paths: list, product_desc: str) -> dict:
@@ -59,6 +60,8 @@ async def _call_mcp_save(scripts: list, image_paths: list, product_desc: str) ->
                 "image_paths": image_paths,
                 "product_desc": product_desc,
             })
+    if isinstance(result, list):
+        return json.loads(result[0]["text"])
     return result
 
 
@@ -133,9 +136,9 @@ def node_research(state: GraphState) -> GraphState:
             "competitor_styles": result.get("competitor_styles", []),
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[Research] 失败，使用空趋势继续：{e}")
-        return {**state, "trend_keywords": [], "trend_summary": "", "competitor_styles": []}
-
 
 def node_script(state: GraphState) -> GraphState:
     """Script Agent：生成3套文案"""
