@@ -51,7 +51,7 @@ def create_marketing_image(
     filename = f"image_{int(time.time())}.png"
     local_path = os.path.join(save_dir, filename)
     os.makedirs(save_dir, exist_ok=True)
-    download_image(url=result["url"], save_path=local_path)
+    download_image(url=result["url"], save_path=local_path, b64_json=result.get("b64_json"))
     return {
         "local_path": local_path,
         "url": result["url"],

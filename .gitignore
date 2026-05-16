@@ -1,6 +1,7 @@
 # 环境变量（含 API Keys，绝不上传）
 .env
 env.txt
+APIKEY.env
 
 # Markdown 文档（不上传）
 *.md
