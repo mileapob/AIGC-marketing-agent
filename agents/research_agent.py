@@ -65,12 +65,15 @@ async def _run_async(product_desc: str, platform: str) -> dict:
             break
 
     try:
-        start = output.find("{")
-        end = output.rfind("}") + 1
-        if start >= 0 and end > start:
-            data = json.loads(output[start:end])
+        if "```json" in output:
+            start = output.find("```json") + 7
+            end = output.find("```", start)
+            json_str = output[start:end].strip()
         else:
-            raise ValueError("No JSON found")
+            start = output.find("{")
+            end = output.rfind("}") + 1
+            json_str = output[start:end]
+        data = json.loads(json_str)
     except Exception:
         data = {
             "trend_keywords": [],
