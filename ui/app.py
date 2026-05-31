@@ -143,6 +143,6 @@ with gr.Blocks(title="AI营销内容生成助手", theme=gr.themes.Soft()) as de
 
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    demo.launch(server_name="0.0.0.0", server_port=int(os.getenv("PORT", 7860)), auth=("admin", "aigc2026"))
     
 
