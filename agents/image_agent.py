@@ -2,7 +2,7 @@
 Image Agent — 多模态
 职责：
   1. 若用户上传了参考图，用视觉模型分析风格
-  2. 将风格 + 文案摘要拼成 gpt-image-1 prompt
+  2. 将风格 + 文案摘要拼成 gpt-image-2 prompt
   3. 调用 generate_image 生成图片并下载本地
 """
 import os
@@ -45,7 +45,7 @@ def _analyze_image_gpt(image_path: str) -> str:
         {
             "type": "text",
             "text": (
-                "请分析这张图片的视觉风格，用英文描述以下要素（供 gpt-image-1 使用）：\n"
+                "请分析这张图片的视觉风格，用英文描述以下要素（供 gpt-image-2 使用）：\n"
                 "1. Color palette (主色调)\n"
                 "2. Composition style (构图风格)\n"
                 "3. Lighting (光线)\n"
@@ -83,7 +83,7 @@ def _analyze_image_qwen(image_path: str) -> str:
                     {"image": f"data:{media_type};base64,{image_data}"},
                     {"text": (
                         "请分析这张图片的视觉风格，用英文描述：色调、构图、光线、整体美感，"
-                        "50词以内，供 gpt-image-1 生成图片使用。"
+                        "50词以内，供gpt-image-2 生成图片使用。"
                     )},
                 ],
             }],
@@ -105,7 +105,7 @@ def _analyze_image_qwen(image_path: str) -> str:
 
 def analyze_reference_image(image_path: str) -> str:
     """根据环境变量选择视觉模型分析参考图"""
-    analyzer = os.getenv("IMAGE_ANALYZER", "gpt-4o-mini").lower()
+    analyzer = os.getenv("IMAGE_ANALYZER", "gpt-image-1-mini").lower()
     if analyzer == "qwen-vl":
         return _analyze_image_qwen(image_path)
     return _analyze_image_gpt(image_path)
@@ -114,7 +114,7 @@ def analyze_reference_image(image_path: str) -> str:
 # ---------- Prompt 构建 ----------
 
 def _build_gpt_prompt(scripts: list[dict], style_desc: str, product_desc: str) -> str:
-    """将文案摘要 + 风格描述合并成  gpt-image-1 prompt"""
+    """将文案摘要 + 风格描述合并成  gpt-image-1-mini prompt"""
     # 取小红书文案的核心卖点
     main_script = next((s for s in scripts if s.get("platform") == "小红书"), scripts[0] if scripts else {})
     title = main_script.get("title", "")
@@ -165,7 +165,7 @@ def run_image_agent(
 
     # Step 2: 构建 prompt
     gpt_prompt = _build_gpt_prompt(scripts, style_desc, product_desc)
-    print(f"[ImageAgent] GPT-image-1 Prompt: {gpt_prompt[:100]}...")
+    print(f"[ImageAgent] gpt-image-2 Prompt: {gpt_prompt[:100]}...")
 
     # Step 3: 通过 MCP 协议调用 create_marketing_image 生成并保存图片
     saved_paths = []
